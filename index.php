@@ -26,31 +26,23 @@ if (!$mysql) {
 ?>
 
 <?php
-// taken from https://stackoverflow.com/a/4356295
-function generateRandomString($length = 8)
-{
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $charactersLength = strlen($characters);
-    $randomString = '';
-
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[random_int(0, $charactersLength - 1)];
-    }
-
-    return $randomString;
-}
-?>
-
-<?php
-if($_SERVER["REQUEST_METHOD"] == "POST") {
-    if(isset($_POST['code-submit'])) {
-        if(isset($_POST['code'])) {
-            $penis = htmlspecialchars($_POST['code']);
-            echo $penis;
-        }
-    } else if (isset($_POST['new-table-submit'])) {
+function getCurrentUrl() {
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+    $domain = $_SERVER['HTTP_HOST'];
+    $requestUri = $_SERVER['REQUEST_URI'];
+    $currentUrl = $protocol . '://' . $domain . $requestUri;
     
+    return $currentUrl;
+}
+
+function appendQueryParam($url, $key, $value) {
+    if (strpos($url, '?') !== false) {
+        $url .= '&' . urlencode($key) . '=' . urlencode($value);
+    } else {
+        $url .= '?' . urlencode($key) . '=' . urlencode($value);
     }
+
+    return $url;
 }
 ?>
 
@@ -65,33 +57,26 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
+    <?php
+        if (isset($_SESSION['error_message'])) {
+            echo "<script> alert('" . addslashes($_SESSION['error_message']) . "'); </script>";
+            unset($_SESSION['error_message']);
+        }
+    ?>
+
     <?php include_once("./templates/header.php") ?>
-
-    <div class="container d-flex flex-column justify-content-center" style="height: 80vh;">
-        <div class="container d-flex flex-column justify-content-between">
-            <div class="container d-flex justify-content-center align-items-center text-center">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="code" class="form-label">Enter Code:</label>
-                        <input type="text" class="form-control text-center" id="code" name="code" placeholder="#########">
-                    </div>
-                    <button type="submit" name="code-submit" class="btn btn-primary">Enter</button>
-                </form>
-            </div>
-
-            <p class="text-center" style="overflow: hidden;">_______________________________________________</p>
-
-            <div class="container d-flex justify-content-center align-items-center text-center">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="new-table" class="form-label">Create New Table:</label>
-                        <input type="text" class="form-control text-center" id="new-table" name="new-table" placeholder="Table Name">
-                    </div>
-                    <button type="submit" name="new-table-submit" class="btn btn-success">Create</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    
+    <?php 
+    if (empty($_GET)) {
+        include_once("./templates/landing.php");
+    }
+    else if (isset($_GET["table"])) {
+        include_once("./templates/table.php");
+    }
+    else {
+        include_once("./templates/404.php");
+    }
+    ?>
 
     <?php include_once("./templates/footer.php"); ?>
 </body>
